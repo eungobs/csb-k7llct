@@ -1,1 +1,265 @@
-https://codesandbox.io/p/sandbox/headless-feather-t4nkg7?file=%2Findex.html%3A1%2C1
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Forecast</title>
+    <style>
+      body {
+        background-image: url('https://th.bing.com/th/id/R.9ed49cae8f224a9dfd64e6a8083ae75c?rik=YgQ1cMDjIgjJFw&riu=http%3a%2f%2fwww.wallpaperbetter.com%2fwallpaper%2f636%2f627%2f698%2fbeautiful-sunset-sun-sea-waves-beach-clouds-2K-wallpaper.jpg&ehk=oGbC6aRH7Lrwe1iYdtHlgTzdIrP0oNySDcjZQTQ%2bbQw%3d&risl=&pid=ImgRaw&r=0');
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-color: blue;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        color: white;
+        font-weight: bold;
+      }
+
+      .red-text {
+        color: red;
+      }
+
+      .day-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 10px;
+        padding: 10px;
+        background-color: rgba(0, 0, 0, 0.5);
+        border-radius: 10px;
+        cursor: pointer; /* Add cursor pointer to indicate clickability */
+      }
+
+      /* Center the content horizontally */
+      .city-input, .current-location, .sun-emoji, .current-time, .current-date, .weather-card {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+      }
+      
+      .city-input input, .city-input button {
+        margin: 5px;
+      }
+
+      /* Style for the sunny emoji */
+      .sunny-emoji {
+        font-size: 3rem;
+        margin-bottom: 10px;
+      }
+    </style>
+</head>
+<body>
+  <div class="sunny-emoji" id="sunEmoji">☀️</div>
+  <h1 class="red-text">Weather Forecast</h1>
+  <div class="city-input">
+    <input type="text" id="cityInput" placeholder="Enter a city">
+    <button id="searchBtn">Search</button>
+  </div>
+  <div class="current-location">
+    <button id="getLocationBtn">Get Current Location</button>
+  </div>
+  <div class="current-time red-text" id="currentTime">Current Time: </div>
+  <div class="current-date red-text" id="currentDate"></div>
+  <div class="weather-card" id="weatherForecast">
+    <!-- Weather forecast for the next 5 days will be added here dynamically -->
+  </div>
+  <p class="red-text">Weather data provided by OpenWeatherMap</p>
+  <p class="red-text">Weather created by <a href="https://github.com/eungobs/my-projects.git" class="red-text">eungobs</a> - @2023</p>
+
+  <script>
+   document.addEventListener("DOMContentLoaded", () => {
+      const apiKey = "3ed565296c19775878a64c31457d90b2";
+      const cityInput = document.getElementById("cityInput");
+      const searchBtn = document.getElementById("searchBtn");
+      const getLocationBtn = document.getElementById("getLocationBtn");
+      const weatherForecast = document.getElementById("weatherForecast");
+      let isCelsius = true;
+
+      searchBtn.addEventListener("click", () => {
+        const city = cityInput.value;
+        if (city) {
+          fetchWeather(city);
+          fetchCityTime(city);
+          fetchFiveDayForecast(city);
+          updateSunnyEmoji(city); 
+        }
+      });
+
+      getLocationBtn.addEventListener("click", () => {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition((position) => {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            fetchWeatherByCoordinates(latitude, longitude);
+            fetchCityTimeByCoordinates(latitude, longitude);
+            fetchFiveDayForecastByCoordinates(latitude, longitude);
+          }, (error) => {
+            console.error("Error getting current location:", error);
+          });
+        } else {
+          console.error("Geolocation is not supported by this browser.");
+        }
+      });
+      function fetchWeather(city) {
+        const units = isCelsius ? "metric" : "imperial";
+        const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=${units}&appid=${apiKey}`;
+
+        fetch(apiUrl)
+          .then(response => response.json())
+          .then(data => {
+            const temperature = data.main.temp;
+            const humidity = data.main.humidity;
+            document.getElementById("temperature").textContent = `Temperature: ${temperature}°${isCelsius ? "C" : "F"}`;
+            document.getElementById("humidity").textContent = `Humidity: ${humidity}%`;
+            
+          })
+          .catch(error => {
+            console.error("Error fetching current weather data:", error);
+          });
+      }
+      function fetchFiveDayForecast(city) {
+        const units = isCelsius ? "metric" : "imperial";
+        const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=${units}&appid=${apiKey}`;
+
+        fetch(apiUrl)
+          .then(response => response.json())
+          .then(data => {
+            // Display 5-day forecast data
+            const forecastList = data.list.slice(0, 5); 
+            // Define the day names
+            const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu"];
+            for (let i = 0; i < forecastList.length; i++) {
+              const forecast = forecastList[i];
+              const date = new Date(forecast.dt * 1000); 
+              const dayOfWeek = dayNames[i]; 
+              const temperature = forecast.main.temp;
+              const humidity = forecast.main.humidity;
+              const weatherEmoji = getWeatherEmoji(forecast.weather[0].main);
+              const dayCard = document.createElement("div");
+              dayCard.classList.add("day-card");
+              dayCard.innerHTML = `
+                <p>${dayOfWeek}</p>
+                <p class="temperature">${temperature}°${isCelsius ? "C" : "F"}</p>
+                <p class="emoji">${weatherEmoji}</p>
+                <p class="humidity">Humidity: ${humidity}%</p>
+              `;
+              dayCard.addEventListener("click", () => {
+                dayCard.style.backgroundColor = getRandomColor();
+              });
+
+              weatherForecast.appendChild(dayCard);
+            }
+          })
+          .catch(error => {
+            console.error("Error fetching 5-day forecast data:", error);
+          });
+      }
+      function updateSunnyEmoji(city) {
+        // You can customize this logic to determine when it's sunny based on the city
+        const isSunny = city.toLowerCase() === "sunny";
+        const sunnyEmoji = document.getElementById("sunEmoji");
+        sunnyEmoji.textContent = isSunny ? "☀️" : "☁️";
+      }
+      function fetchCityTime(city) {
+        fetch(`http://worldtimeapi.org/api/timezone/${city}`)
+          .then(response => response.json())
+          .then(data => {
+            const dateTimeParts = data.utc_datetime.split("T");
+            const timeParts = dateTimeParts[1].split(":");
+            const hours = timeParts[0];
+            const minutes = timeParts[1];
+            document.getElementById("currentTime").textContent = `Current Time in ${city}: ${hours}:${minutes}`;
+          })
+          .catch(error => {
+            console.error("Error fetching city time:", error);
+          });
+      }
+      function fetchCityTimeByCoordinates(latitude, longitude) {
+        // Use an appropriate API to get the current time at the specified coordinates
+        // You can replace this with your preferred time API
+        fetch(`http://worldtimeapi.org/api/timezone/Etc/UTC`)
+          .then(response => response.json())
+          .then(data => {
+            const dateTimeParts = data.utc_datetime.split("T");
+            const timeParts = dateTimeParts[1].split(":");
+            const hours = timeParts[0];
+            const minutes = timeParts[1];
+            document.getElementById("currentTime").textContent = `Current Time at coordinates: ${hours}:${minutes}`;
+          })
+          .catch(error => {
+            console.error("Error fetching city time:", error);
+          });
+      }
+      function getWeatherEmoji(weatherCondition) {
+        const emojiMapping = {
+          Clear: "☀️",
+          Clouds: "☁️",
+          Rain: "🌧️",
+          Snow: "❄️",
+          Thunderstorm: "⛈️",
+          Drizzle: "🌦️",
+          Mist: "🌫️",
+          Smoke: "🌫️",
+          Haze: "🌫️",
+          Dust: "🌫️",
+          Fog: "🌫️",
+          Sand: "🌫️",
+          Ash: "🌫️",
+          Tornado: "🌪️",
+        };
+        return emojiMapping[weatherCondition] || "❓";
+      }
+
+      // Function to convert temperature units
+      function convertTemperature(temperature, toCelsius) {
+        if (toCelsius) {
+          // Convert from Fahrenheit to Celsius
+          return ((temperature - 32) * 5) / 9;
+        } else {
+          // Convert from Celsius to Fahrenheit
+          return (temperature * 9) / 5 + 32;
+        }
+      }
+      function updateTemperatureUnit() {
+        isCelsius = !isCelsius; // Toggle the unit
+        const temperatureElements = document.querySelectorAll(".temperature");
+        temperatureElements.forEach(element => {
+          const currentTemperature = parseFloat(element.getAttribute("data-temperature"));
+          const convertedTemperature = convertTemperature(currentTemperature, isCelsius);
+          element.textContent = `Temperature: ${convertedTemperature.toFixed(2)}°${isCelsius ? "C" : "F"}`;
+        });
+      }
+
+      // Initialize the page
+      function initializePage() {
+        // Display the current date
+        const currentDate = new Date();
+        document.getElementById("currentDate").textContent = `Current Date: ${currentDate.toDateString()}`;
+
+        setInterval(() => {
+          const now = new Date();
+          const currentTime = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+          document.getElementById("currentTime").textContent = `Current Time: ${currentTime}`;
+        }, 1000);
+      }
+
+      function getRandomColor() {
+        const letters = "0123456789ABCDEF";
+        let color = "#";
+        for (let i = 0; i < 6; i++) {
+          color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+      }
+
+      initializePage();
+    });
+  </script>
+</body>
+</html>
