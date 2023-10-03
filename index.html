@@ -32,10 +32,9 @@
         padding: 10px;
         background-color: rgba(0, 0, 0, 0.5);
         border-radius: 10px;
-        cursor: pointer; /* Add cursor pointer to indicate clickability */
+        cursor: pointer; 
       }
 
-      /* Center the content horizontally */
       .city-input, .current-location, .sun-emoji, .current-time, .current-date, .weather-card {
         display: flex;
         flex-direction: row;
@@ -47,7 +46,6 @@
         margin: 5px;
       }
 
-      /* Style for the sunny emoji */
       .sunny-emoji {
         font-size: 3rem;
         margin-bottom: 10px;
@@ -81,7 +79,7 @@
       const searchBtn = document.getElementById("searchBtn");
       const getLocationBtn = document.getElementById("getLocationBtn");
       const weatherForecast = document.getElementById("weatherForecast");
-      const currentCityElement = document.getElementById("currentCity"); // Added this line
+      const currentCityElement = document.getElementById("currentCity"); 
       let isCelsius = true;
 
       searchBtn.addEventListener("click", () => {
@@ -104,7 +102,7 @@
             fetchWeatherByCoordinates(latitude, longitude);
             fetchCityTimeByCoordinates(latitude, longitude);
             fetchFiveDayForecastByCoordinates(latitude, longitude);
-            fetchCityNameByCoordinates(latitude, longitude); // Added this line
+            fetchCityNameByCoordinates(latitude, longitude); 
           }, (error) => {
             console.error("Error getting current location:", error);
           });
@@ -136,9 +134,7 @@
         fetch(apiUrl)
           .then(response => response.json())
           .then(data => {
-            // Display 5-day forecast data
             const forecastList = data.list.slice(0, 5); 
-            // Define the day names
             const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu"];
             for (let i = 0; i < forecastList.length; i++) {
               const forecast = forecastList[i];
@@ -187,8 +183,6 @@
           });
       }
       function fetchCityTimeByCoordinates(latitude, longitude) {
-        // Use an appropriate API to get the current time at the specified coordinates
-        // You can replace this with your preferred time API
         fetch(`http://worldtimeapi.org/api/timezone/Etc/UTC`)
           .then(response => response.json())
           .then(data => {
@@ -222,7 +216,6 @@
         return emojiMapping[weatherCondition] || "❓";
       }
 
-      // Function to convert temperature units
       function convertTemperature(temperature, toCelsius) {
         if (toCelsius) {
           // Convert from Fahrenheit to Celsius
@@ -242,9 +235,7 @@
         });
       }
 
-      // Initialize the page
       function initializePage() {
-        // Display the current date
         const currentDate = new Date();
         document.getElementById("currentDate").textContent = `Current Date: ${currentDate.toDateString()}`;
 
