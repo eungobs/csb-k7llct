@@ -63,6 +63,8 @@
   </div>
   <div class="current-location">
     <button id="getLocationBtn">Get Current Location</button>
+    <div id="currentCity"></div>
+    <div id="searchResult"></div>
   </div>
   <div class="current-time red-text" id="currentTime">Current Time: </div>
   <div class="current-date red-text" id="currentDate"></div>
@@ -79,17 +81,20 @@
       const searchBtn = document.getElementById("searchBtn");
       const getLocationBtn = document.getElementById("getLocationBtn");
       const weatherForecast = document.getElementById("weatherForecast");
+      const currentCityElement = document.getElementById("currentCity"); // Added this line
       let isCelsius = true;
 
       searchBtn.addEventListener("click", () => {
-        const city = cityInput.value;
-        if (city) {
-          fetchWeather(city);
-          fetchCityTime(city);
-          fetchFiveDayForecast(city);
-          updateSunnyEmoji(city); 
-        }
-      });
+  const city = cityInput.value;
+  if (city) {
+    document.getElementById("searchResult").textContent = `Searching for weather in ${city}...`; // Change this text
+    fetchWeather(city);
+    fetchCityTime(city);
+    fetchFiveDayForecast(city);
+    updateSunnyEmoji(city); 
+  }
+});
+
 
       getLocationBtn.addEventListener("click", () => {
         if (navigator.geolocation) {
@@ -99,6 +104,7 @@
             fetchWeatherByCoordinates(latitude, longitude);
             fetchCityTimeByCoordinates(latitude, longitude);
             fetchFiveDayForecastByCoordinates(latitude, longitude);
+            fetchCityNameByCoordinates(latitude, longitude); // Added this line
           }, (error) => {
             console.error("Error getting current location:", error);
           });
@@ -263,3 +269,4 @@
   </script>
 </body>
 </html>
+     
